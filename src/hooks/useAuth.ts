@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@/types';
 
 export function useAuth() {
@@ -13,6 +13,7 @@ export function useAuth() {
     setLoading(true);
     setError(null);
 
+    const supabase = getSupabaseClient();
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -31,6 +32,7 @@ export function useAuth() {
     setLoading(true);
     setError(null);
 
+    const supabase = getSupabaseClient();
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -46,6 +48,7 @@ export function useAuth() {
   };
 
   const signOut = async () => {
+    const supabase = getSupabaseClient();
     await supabase.auth.signOut();
     setUser(null);
   };
