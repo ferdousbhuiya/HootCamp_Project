@@ -14,6 +14,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
   const [showExplanation, setShowExplanation] = useState(false);
 
   const scoreColor = match.match_score >= 0.8 ? 'success' : match.match_score >= 0.5 ? 'warning' : 'default';
+  const matchType = match.type?.replace('_', ' ') || 'job';
 
   return (
     <div className="space-y-4">
@@ -27,7 +28,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
         <p className="text-gray-600 mb-3">{match.description}</p>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500 capitalize">
-            {match.type.replace('_', ' ')}
+            {matchType}
           </span>
           <span className="text-sm text-primary-600">
             {showExplanation ? 'Hide' : 'Show'} Details

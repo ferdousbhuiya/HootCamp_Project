@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useMatches } from '@/hooks/useMatches';
 import { useSkills } from '@/hooks/useSkills';
 import MatchList from '@/components/matches/MatchList';
@@ -9,6 +10,13 @@ import Card from '@/components/ui/Card';
 export default function MatchesPage() {
   const { matches, loading, error, findJobMatches } = useMatches();
   const { skills } = useSkills();
+
+  // Auto-fetch matches when skills are available
+  useEffect(() => {
+    if (skills.length > 0 && matches.length === 0 && !loading) {
+      findJobMatches(skills);
+    }
+  }, [skills, matches.length, loading, findJobMatches]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">

@@ -1,5 +1,4 @@
-import { callOpenAI } from './openai';
-import { callLMStudio } from './lmstudio';
+import { callGemini } from './gemini';
 import type { Skill, Match } from '@/types';
 
 export async function findMatches(
@@ -12,25 +11,27 @@ export async function findMatches(
 
 Find 5 matching ${matchType === 'job' ? 'job roles' : matchType === 'learning_path' ? 'learning paths' : 'credentials/certifications'}.
 
-Return a JSON array with:
+Return a JSON array with objects containing:
 - title: name of the match
-- description: brief description
-- match_score: 0.0 to 1.0
+- description: brief description (1-2 sentences)
+- match_score: number between 0.0 and 1.0
 - matched_skills: array of skill names that match
-- explanation: why this matches the skills
+- explanation: why this matches the skills (2-3 sentences)
+- type: "${matchType}"
 
-Return ONLY valid JSON array.`;
+Return ONLY valid JSON array. No other text.`;
 
-  let result: string;
-  try {
-    result = await callLMStudio(prompt);
-  } catch {
-    result = await callOpenAI(prompt);
-  }
+  const result = await callGemini(prompt);
 
   try {
     const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleaned) as Match[];
+    const matches = JSON.parse(cleaned) as Match[];
+
+    // Ensure each match has a type field
+    return matches.map(match => ({
+      ...match,
+      type: match.type || matchType,
+    }));
   } catch {
     return [];
   }

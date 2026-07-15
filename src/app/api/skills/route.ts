@@ -22,10 +22,16 @@ export async function POST(request: NextRequest) {
       text = buffer.toString('utf-8');
     }
 
+    if (!text || text.trim().length === 0) {
+      return NextResponse.json({ error: 'Could not extract text from file' }, { status: 400 });
+    }
+
     const skills = await parseResumeToSkills(text);
 
     return NextResponse.json({ skills });
   } catch (error) {
-    return NextResponse.json({ error: 'Skill extraction failed' }, { status: 500 });
+    console.error('Skill extraction error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: `Skill extraction failed: ${errorMessage}` }, { status: 500 });
   }
 }

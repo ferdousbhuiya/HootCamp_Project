@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Button from '@/components/ui/Button';
 
 interface FileDropzoneProps {
@@ -9,6 +9,7 @@ interface FileDropzoneProps {
 
 const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -41,16 +42,28 @@ const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
     }
   };
 
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div
-      className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${
-        isDragging ? 'border-primary-500 bg-primary-50' : 'border-gray-300'
+      className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
+        isDragging ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-gray-400'
       }`}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
+      onClick={handleBrowseClick}
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx,.txt"
+        className="hidden"
+        onChange={handleFileInput}
+      />
       <div className="text-gray-400 mb-4">
         <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -60,15 +73,9 @@ const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
         Drag and drop your resume, transcript, or certificate here
       </p>
       <p className="text-sm text-gray-500 mb-4">or</p>
-      <label>
-        <input
-          type="file"
-          accept=".pdf,.docx,.txt"
-          className="hidden"
-          onChange={handleFileInput}
-        />
-        <Button variant="outline">Browse Files</Button>
-      </label>
+      <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleBrowseClick(); }}>
+        Browse Files
+      </Button>
       <p className="text-xs text-gray-500 mt-4">PDF, DOCX, or TXT (max 10MB)</p>
     </div>
   );

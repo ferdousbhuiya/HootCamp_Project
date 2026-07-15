@@ -1,5 +1,4 @@
-import { callOpenAI } from './openai';
-import { callLMStudio } from './lmstudio';
+import { callGemini } from './gemini';
 import type { Skill } from '@/types';
 
 export async function parseResumeToSkills(text: string): Promise<Skill[]> {
@@ -11,14 +10,9 @@ export async function parseResumeToSkills(text: string): Promise<Skill[]> {
 Resume text:
 ${text}
 
-Return ONLY valid JSON array.`;
+Return ONLY valid JSON array. No other text.`;
 
-  let result: string;
-  try {
-    result = await callLMStudio(prompt);
-  } catch {
-    result = await callOpenAI(prompt);
-  }
+  const result = await callGemini(prompt);
 
   try {
     const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

@@ -19,10 +19,13 @@ export function useMatches() {
         body: JSON.stringify({ skills, matchType: 'job' }),
       });
 
-      if (!response.ok) throw new Error('Failed to find matches');
-
       const data = await response.json();
-      setMatches(data.matches);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to find matches');
+      }
+
+      setMatches(data.matches || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {

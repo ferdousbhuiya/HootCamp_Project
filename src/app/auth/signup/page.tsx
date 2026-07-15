@@ -11,13 +11,14 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { loading, error, signUp } = useAuth();
+  const { loading, error, success, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === confirmPassword) {
-      await signUp(email, password);
+    if (password !== confirmPassword) {
+      return;
     }
+    await signUp(email, password);
   };
 
   return (
@@ -28,6 +29,12 @@ export default function SignupPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded mb-4">
+            {success}
           </div>
         )}
 
@@ -53,6 +60,9 @@ export default function SignupPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
+          {password !== confirmPassword && confirmPassword && (
+            <p className="text-red-500 text-sm">Passwords do not match</p>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Creating account...' : 'Sign Up'}
           </Button>

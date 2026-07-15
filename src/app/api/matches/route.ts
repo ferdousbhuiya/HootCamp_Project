@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ matches });
   } catch (error) {
-    return NextResponse.json({ error: 'Match finding failed' }, { status: 500 });
+    console.error('Match finding error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: `Match finding failed: ${errorMessage}` }, { status: 500 });
   }
 }
