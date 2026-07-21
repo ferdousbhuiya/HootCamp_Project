@@ -30,6 +30,7 @@ function getInitials(name: string, email: string) {
 
 const Navbar = () => {
   const [user, setUser] = useState<NavUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -38,12 +39,13 @@ const Navbar = () => {
     let isMounted = true;
 
     const syncUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getSession();
       if (!isMounted) return;
 
-      const authUser = data.user;
+      const authUser = data.session?.user;
       if (!authUser) {
         setUser(null);
+        setAuthReady(true);
         return;
       }
 
@@ -52,6 +54,7 @@ const Navbar = () => {
         fullName: String(authUser.user_metadata?.full_name ?? '').trim(),
         phoneNumber: String(authUser.user_metadata?.phone_number ?? '').trim() || undefined,
       });
+      setAuthReady(true);
     };
 
     void syncUser();
@@ -60,6 +63,7 @@ const Navbar = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
+      setAuthReady(true);
 
       const authUser = session?.user;
       if (!authUser) {
@@ -93,8 +97,8 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-slate-200 bg-white">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-900 text-sm font-semibold tracking-wide text-white">
             SP
@@ -123,7 +127,7 @@ const Navbar = () => {
           })}
         </div>
 
-        {user ? (
+        {authReady && user ? (
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 sm:flex">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold uppercase tracking-wide text-white">
@@ -138,7 +142,7 @@ const Navbar = () => {
               Sign out
             </Button>
           </div>
-        ) : (
+        ) : authReady ? (
           <div className="flex items-center gap-3">
             <Link
               href="/auth/login"
@@ -153,6 +157,8 @@ const Navbar = () => {
               Sign Up
             </Link>
           </div>
+        ) : (
+          <div className="h-9 w-32 rounded-full bg-slate-100" aria-hidden="true" />
         )}
       </div>
     </nav>
