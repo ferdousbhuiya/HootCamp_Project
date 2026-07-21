@@ -5,6 +5,25 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@/types';
 
+async function syncSessionWithServer(accessToken: string, refreshToken: string) {
+  const response = await fetch('/api/auth/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessToken, refreshToken }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error || 'Unable to persist your sign-in session.');
+  }
+}
+
+async function clearServerSession() {
+  await fetch('/api/auth/session', {
+    method: 'DELETE',
+  });
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,6 +47,7 @@ export function useAuth() {
       });
       if (authError) { setError(authError.message); return; }
       if (data.session && data.user) {
+        await syncSessionWithServer(data.session.access_token, data.session.refresh_token);
         setUser(data.user as unknown as User);
         router.replace('/dashboard');
         router.refresh();
@@ -46,6 +66,7 @@ export function useAuth() {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (authError) { setError(authError.message); return; }
       if (!data.session || !data.user) { setError('Sign-in did not create an active session. Check email verification.'); return; }
+      await syncSessionWithServer(data.session.access_token, data.session.refresh_token);
       setUser(data.user as unknown as User);
       router.replace('/dashboard');
       router.refresh();
@@ -56,6 +77,7 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     try { await getSupabaseClient().auth.signOut(); } finally {
+      await clearServerSession();
       setUser(null);
       router.replace('/auth/login');
       router.refresh();
