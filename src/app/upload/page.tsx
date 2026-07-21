@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import FileDropzone from '@/components/upload/FileDropzone';
 import SkillGrid from '@/components/skills/SkillGrid';
 import { useSkills } from '@/hooks/useSkills';
 import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { skills, loading, error, extractSkills } = useSkills();
+  const { skills, loading, error, extractSkills, addSkill, updateSkill, removeSkill } = useSkills();
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
@@ -44,14 +46,39 @@ export default function UploadPage() {
         </Card>
       )}
 
-      {skills.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-bold mb-4">
-            Extracted Skills ({skills.length})
-          </h2>
-          <SkillGrid skills={skills} />
-        </div>
-      )}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">
+          {skills.length > 0 ? `Extracted Skills (${skills.length})` : 'Skills'}
+        </h2>
+
+        {skills.length === 0 && (
+          <Card className="mb-6 border-dashed border-gray-200 bg-gray-50">
+            <p className="text-gray-600">
+              No skills extracted yet. Upload a resume to auto-fill this list, or add one manually below.
+            </p>
+          </Card>
+        )}
+
+        <SkillGrid
+          skills={skills}
+          onAdd={addSkill}
+          onUpdate={updateSkill}
+          onRemove={removeSkill}
+        />
+
+        {skills.length > 0 && (
+          <Card className="mt-8">
+            <div className="flex justify-between items-center">
+              <p className="text-gray-600">
+                {skills.length} skills extracted successfully
+              </p>
+              <Link href="/matches">
+                <Button>Find Matches →</Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

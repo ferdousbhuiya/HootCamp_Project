@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Match, Skill } from '@/types';
 
 export function useMatches() {
@@ -8,7 +8,10 @@ export function useMatches() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const findJobMatches = async (skills: Skill[]) => {
+  const findJobMatches = useCallback(async (
+    skills: Skill[],
+    matchType: 'job' | 'learning_path' | 'credential' = 'job'
+  ) => {
     setLoading(true);
     setError(null);
 
@@ -16,7 +19,7 @@ export function useMatches() {
       const response = await fetch('/api/matches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skills, matchType: 'job' }),
+        body: JSON.stringify({ skills, matchType }),
       });
 
       const data = await response.json();
@@ -31,7 +34,7 @@ export function useMatches() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { matches, loading, error, findJobMatches };
 }

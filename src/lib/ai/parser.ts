@@ -1,23 +1,31 @@
-import { callGemini } from './gemini';
+import { randomUUID } from 'crypto';
+import { callAIWithFallback } from './unified';
 import type { Skill } from '@/types';
+import { cleanText, clampConfidence } from '@/lib/security/validation';
 
 export async function parseResumeToSkills(text: string): Promise<Skill[]> {
   const prompt = `Extract skills from this resume text. Return a JSON array of objects with:
-- name: skill name
+- name
 - category: one of [technical, soft, domain, tool]
 - confidence: 0.0 to 1.0
-
 Resume text:
 ${text}
-
-Return ONLY valid JSON array. No other text.`;
-
-  const result = await callGemini(prompt);
-
+Return ONLY valid JSON array.`;
+  const result = await callAIWithFallback(prompt);
+  let cleaned = '';
   try {
-    const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleaned) as Skill[];
-  } catch {
+    cleaned = result.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const json: unknown = JSON.parse(cleaned);
+    if (!Array.isArray(json)) return [];
+    return json.map((item: any): Skill => ({
+      id: randomUUID(),
+      name: cleanText(item?.name, 80),
+      category: cleanText(item?.category, 30).toLowerCase() || 'technical',
+      confidence: clampConfidence(item?.confidence),
+      source: 'resume',
+    })).filter((skill) => skill.name.length > 0);
+  } catch (error) {
+    console.error('Failed to parse skills JSON:', error);
     return [];
   }
 }

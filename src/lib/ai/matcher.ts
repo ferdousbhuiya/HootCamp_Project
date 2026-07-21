@@ -1,38 +1,48 @@
-import { callGemini } from './gemini';
-import type { Skill, Match } from '@/types';
+import { randomUUID } from 'crypto';
+import { callAIWithFallback } from './unified';
+import type { Match, Skill } from '@/types';
+import { cleanText, clampConfidence } from '@/lib/security/validation';
 
-export async function findMatches(
-  skills: Skill[],
-  matchType: 'job' | 'learning_path' | 'credential' = 'job'
-): Promise<Match[]> {
-  const skillList = skills.map(s => s.name).join(', ');
+type MatchType = 'job' | 'learning_path' | 'credential';
 
+export async function findMatches(skills: Skill[], matchType: MatchType = 'job'): Promise<Match[]> {
+  const skillList = skills.map((skill) => cleanText(skill.name, 80)).join(', ');
+  const target = matchType === 'job' ? 'job roles' : matchType === 'learning_path' ? 'learning paths' : 'credentials/certifications';
   const prompt = `Given these skills: ${skillList}
-
-Find 5 matching ${matchType === 'job' ? 'job roles' : matchType === 'learning_path' ? 'learning paths' : 'credentials/certifications'}.
-
+Find 5 matching ${target}.
 Return a JSON array with objects containing:
-- title: name of the match
-- description: brief description (1-2 sentences)
-- match_score: number between 0.0 and 1.0
-- matched_skills: array of skill names that match
-- explanation: why this matches the skills (2-3 sentences)
+- title
+- description
+- match_score
+- matched_skills
+- explanation
+- missing_skills
+- next_steps
 - type: "${matchType}"
+Return ONLY valid JSON array.`;
 
-Return ONLY valid JSON array. No other text.`;
-
-  const result = await callGemini(prompt);
-
+  const result = await callAIWithFallback(prompt);
+  const cleaned = result.replace(/```json/gi, '').replace(/```/g, '').trim();
+  let json: unknown;
   try {
-    const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const matches = JSON.parse(cleaned) as Match[];
-
-    // Ensure each match has a type field
-    return matches.map(match => ({
-      ...match,
-      type: match.type || matchType,
-    }));
-  } catch {
+    json = JSON.parse(cleaned);
+  } catch (error) {
+    console.error('Failed to parse match JSON:', error);
     return [];
   }
+  if (!Array.isArray(json)) return [];
+
+  return json.map((item: any): Match => ({
+    id: randomUUID(),
+    user_id: '',
+    created_at: new Date().toISOString(),
+    title: cleanText(item?.title, 120),
+    description: cleanText(item?.description, 300),
+    match_score: clampConfidence(item?.match_score),
+    matched_skills: Array.isArray(item?.matched_skills) ? item.matched_skills.map((skill: unknown) => cleanText(skill, 80)).filter(Boolean) : [],
+    explanation: cleanText(item?.explanation, 500),
+    missing_skills: Array.isArray(item?.missing_skills) ? item.missing_skills.map((skill: unknown) => cleanText(skill, 80)).filter(Boolean) : [],
+    next_steps: Array.isArray(item?.next_steps) ? item.next_steps.map((step: unknown) => cleanText(step, 160)).filter(Boolean) : [],
+    type: matchType,
+  })).filter((match) => match.title.length > 0);
 }

@@ -1,37 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseResumeToSkills, extractTextFromPDF, extractTextFromDOCX } from '@/lib/ai/parser';
+import { extractTextFromDOCX, extractTextFromPDF, parseResumeToSkills } from '@/lib/ai/parser';
+import { extensionOf, MAX_TEXT_CHARS, validateUpload } from '@/lib/security/validation';
+
+export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
+    const validationError = validateUpload(file);
+    if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-    }
-
-    const bytes = await file.arrayBuffer();
+    const bytes = await file!.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const extension = extensionOf(file!.name);
+    let rawText: string;
 
-    let text: string;
-    if (file.name.endsWith('.pdf')) {
-      text = await extractTextFromPDF(buffer);
-    } else if (file.name.endsWith('.docx')) {
-      text = await extractTextFromDOCX(buffer);
+    if (extension === 'pdf') {
+      rawText = await extractTextFromPDF(buffer);
+    } else if (extension === 'docx') {
+      rawText = await extractTextFromDOCX(buffer);
+    } else if (extension === 'txt') {
+      rawText = buffer.toString('utf-8');
     } else {
-      text = buffer.toString('utf-8');
+      return NextResponse.json(
+        { error: 'Unsupported file type. Upload a PDF, DOCX, or TXT file.' },
+        { status: 400 }
+      );
     }
 
-    if (!text || text.trim().length === 0) {
-      return NextResponse.json({ error: 'Could not extract text from file' }, { status: 400 });
+    const text = rawText.trim().slice(0, MAX_TEXT_CHARS);
+    if (!text) {
+      return NextResponse.json(
+        { error: 'Could not extract text. Upload a text-based PDF, DOCX, or TXT file.' },
+        { status: 400 }
+      );
     }
 
     const skills = await parseResumeToSkills(text);
-
     return NextResponse.json({ skills });
   } catch (error) {
-    console.error('Skill extraction error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: `Skill extraction failed: ${errorMessage}` }, { status: 500 });
+    console.error('Resume parsing failed:', error);
+    return NextResponse.json({ error: 'Server error parsing resume.' }, { status: 500 });
   }
 }

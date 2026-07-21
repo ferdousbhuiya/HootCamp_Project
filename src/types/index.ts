@@ -39,6 +39,8 @@ export interface Match {
   match_score: number;
   matched_skills: string[];
   explanation: string;
+  missing_skills?: string[];
+  next_steps?: string[];
   type: 'job' | 'learning_path' | 'credential';
   created_at: string;
 }

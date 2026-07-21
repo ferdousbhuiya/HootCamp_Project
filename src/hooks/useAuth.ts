@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@/types';
@@ -12,53 +12,46 @@ export function useAuth() {
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
-  const signUp = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
+  const signUp = useCallback(async (email: string, password: string) => {
+    setLoading(true); setError(null); setSuccess(null);
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error: authError } = await supabase.auth.signUp({ email: email.trim(), password });
+      if (authError) { setError(authError.message); return; }
+      if (data.session && data.user) {
+        setUser(data.user as unknown as User);
+        router.replace('/dashboard');
+        router.refresh();
+      } else if (data.user) {
+        setSuccess('Account created! Check your email for the verification link before signing in.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to create your account.');
+    } finally { setLoading(false); }
+  }, [router]);
 
-    const supabase = getSupabaseClient();
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setError(authError.message);
-    } else if (data.user) {
-      setSuccess('Account created! Check your email for verification link.');
-    }
-
-    setLoading(false);
-  };
-
-  const signIn = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    const supabase = getSupabaseClient();
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setError(authError.message);
-    } else if (data.user) {
+  const signIn = useCallback(async (email: string, password: string) => {
+    setLoading(true); setError(null); setSuccess(null);
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (authError) { setError(authError.message); return; }
+      if (!data.session || !data.user) { setError('Sign-in did not create an active session. Check email verification.'); return; }
       setUser(data.user as unknown as User);
-      router.push('/dashboard');
+      router.replace('/dashboard');
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to sign in.');
+    } finally { setLoading(false); }
+  }, [router]);
+
+  const signOut = useCallback(async () => {
+    try { await getSupabaseClient().auth.signOut(); } finally {
+      setUser(null);
+      router.replace('/auth/login');
+      router.refresh();
     }
-
-    setLoading(false);
-  };
-
-  const signOut = async () => {
-    const supabase = getSupabaseClient();
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/auth/login');
-  };
+  }, [router]);
 
   return { user, loading, error, success, signUp, signIn, signOut };
 }

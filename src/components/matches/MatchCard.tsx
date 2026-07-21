@@ -22,7 +22,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold text-gray-900">{match.title}</h3>
           <Badge variant={scoreColor}>
-            {Math.round(match.match_score * 100)}% Match
+            {Math.round(match.match_score * 100)}% AI Match
           </Badge>
         </div>
         <p className="text-gray-600 mb-3">{match.description}</p>
@@ -40,6 +40,8 @@ const MatchCard = ({ match }: MatchCardProps) => {
         <ExplanationPanel
           explanation={match.explanation}
           matchedSkills={match.matched_skills}
+          missingSkills={match.missing_skills}
+          nextSteps={match.next_steps}
         />
       )}
     </div>
