@@ -4,35 +4,41 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <h3 className="text-lg font-semibold mb-2">Skills Found</h3>
-          <p className="text-4xl font-bold text-primary-600">0</p>
-        </Card>
-        <Card>
-          <h3 className="text-lg font-semibold mb-2">Matches</h3>
-          <p className="text-4xl font-bold text-primary-600">0</p>
-        </Card>
-        <Card>
-          <h3 className="text-lg font-semibold mb-2">Documents</h3>
-          <p className="text-4xl font-bold text-primary-600">0</p>
-        </Card>
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mb-10 max-w-3xl">
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
+        <p className="mt-3 text-lg leading-8 text-slate-600">A quiet overview of your extracted skills, saved documents, and next actions.</p>
       </div>
 
-      <Card>
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="space-x-4">
-          <Link href="/upload">
-            <Button>Upload Resume</Button>
-          </Link>
-          <Link href="/matches">
-            <Button variant="outline">View Matches</Button>
-          </Link>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card>
+            <p className="text-sm font-medium text-slate-500">Skills found</p>
+            <p className="mt-3 text-4xl font-semibold text-slate-900">0</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-slate-500">Matches</p>
+            <p className="mt-3 text-4xl font-semibold text-slate-900">0</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-slate-500">Documents</p>
+            <p className="mt-3 text-4xl font-semibold text-slate-900">0</p>
+          </Card>
         </div>
-      </Card>
+
+        <Card>
+          <h2 className="text-xl font-semibold text-slate-900">Quick actions</h2>
+          <p className="mt-2 text-sm text-slate-600">Jump to the next step without hunting through menus.</p>
+          <div className="mt-6 space-y-3">
+            <Link href="/upload" className="block">
+              <Button className="w-full">Upload resume</Button>
+            </Link>
+            <Link href="/matches" className="block">
+              <Button variant="outline" className="w-full">View matches</Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

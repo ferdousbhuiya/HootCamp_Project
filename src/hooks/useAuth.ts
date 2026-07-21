@@ -12,11 +12,20 @@ export function useAuth() {
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string, fullName: string, phoneNumber: string) => {
     setLoading(true); setError(null); setSuccess(null);
     try {
       const supabase = getSupabaseClient();
-      const { data, error: authError } = await supabase.auth.signUp({ email: email.trim(), password });
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            phone_number: phoneNumber.trim(),
+          },
+        },
+      });
       if (authError) { setError(authError.message); return; }
       if (data.session && data.user) {
         setUser(data.user as unknown as User);
