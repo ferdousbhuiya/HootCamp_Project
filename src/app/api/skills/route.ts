@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
     const skills = await parseResumeToSkills(text);
     return NextResponse.json({ skills });
   } catch (error) {
-    console.error('Resume parsing failed:', error);
-    return NextResponse.json({ error: 'Server error parsing resume.' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Resume parsing failed:', message, error);
+    return NextResponse.json({ error: `Server error parsing resume: ${message}` }, { status: 500 });
   }
 }
