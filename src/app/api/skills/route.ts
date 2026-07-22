@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTextFromDOCX, extractTextFromPDF, parseResumeToSkills } from '@/lib/ai/parser';
+import {
+  extractTextFromDOCX,
+  extractTextFromImage,
+  extractTextFromPDF,
+  parseResumeToSkills,
+} from '@/lib/ai/parser';
 import { extensionOf, MAX_TEXT_CHARS, validateUpload } from '@/lib/security/validation';
 
 export const runtime = 'nodejs';
@@ -23,9 +28,11 @@ export async function POST(request: NextRequest) {
       rawText = await extractTextFromDOCX(buffer);
     } else if (extension === 'txt') {
       rawText = buffer.toString('utf-8');
+    } else if (['png', 'jpg', 'jpeg'].includes(extension)) {
+      rawText = await extractTextFromImage(buffer);
     } else {
       return NextResponse.json(
-        { error: 'Unsupported file type. Upload a PDF, DOCX, or TXT file.' },
+        { error: 'Unsupported file type. Upload a PDF, DOCX, TXT, PNG, or JPG file.' },
         { status: 400 }
       );
     }

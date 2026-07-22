@@ -18,10 +18,11 @@ export interface Resume {
 
 export interface Skill {
   id: string;
+  user_id: string;
   name: string;
   category: string;
   confidence: number;
-  source: 'resume' | 'transcript' | 'certificate';
+  source: 'resume' | 'transcript' | 'certificate' | 'manual';
 }
 
 export interface UserProfile {

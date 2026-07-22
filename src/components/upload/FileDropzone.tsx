@@ -4,10 +4,10 @@ import { useCallback, useRef, useState } from 'react';
 import Button from '@/components/ui/Button';
 
 interface FileDropzoneProps {
-  onFileSelect: (file: File) => void;
+  onFilesSelect: (files: File[]) => void;
 }
 
-const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
+const FileDropzone = ({ onFilesSelect }: FileDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,16 +29,16 @@ const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
 
       const files = e.dataTransfer.files;
       if (files && files.length > 0) {
-        onFileSelect(files[0]);
+        onFilesSelect(Array.from(files));
       }
     },
-    [onFileSelect]
+    [onFilesSelect]
   );
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      onFileSelect(files[0]);
+      onFilesSelect(Array.from(files));
     }
   };
 
@@ -60,7 +60,8 @@ const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,.docx,.txt"
+        multiple
+        accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"
         className="hidden"
         onChange={handleFileInput}
       />
@@ -70,13 +71,13 @@ const FileDropzone = ({ onFileSelect }: FileDropzoneProps) => {
         </svg>
       </div>
       <p className="text-gray-600 mb-4">
-        Drag and drop your resume, transcript, or certificate here
+        Drag and drop your resume, transcript, or certificates here
       </p>
       <p className="text-sm text-gray-500 mb-4">or</p>
       <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleBrowseClick(); }}>
         Browse Files
       </Button>
-      <p className="text-xs text-gray-500 mt-4">PDF, DOCX, or TXT (max 10MB)</p>
+      <p className="text-xs text-gray-500 mt-4">PDF, DOCX, TXT, JPG, PNG (max 10MB each)</p>
     </div>
   );
 };

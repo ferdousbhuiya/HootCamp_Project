@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createWorker } from 'tesseract.js';
 import { callAIWithFallback } from './unified';
 import type { Skill } from '@/types';
 import { cleanText, clampConfidence } from '@/lib/security/validation';
@@ -41,3 +42,11 @@ export async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
   const result = await mammoth.extractRawText({ buffer });
   return result.value;
 }
+
+export async function extractTextFromImage(buffer: Buffer): Promise<string> {
+  const worker = await createWorker('eng');
+  const ret = await worker.recognize(buffer);
+  await worker.terminate();
+  return ret.data.text;
+}
+
