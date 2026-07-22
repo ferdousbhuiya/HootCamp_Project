@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatches } from '@/hooks/useMatches';
 import { useSkills } from '@/hooks/useSkills';
+import { useAuthContext } from '@/context/AuthContext';
 import MatchList from '@/components/matches/MatchList';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -19,7 +20,8 @@ export default function MatchesPage() {
   const [activeType, setActiveType] = useState<MatchType>('job');
   const hasAutoLoadedRef = useRef(false);
   const { matches, loading, error, findJobMatches } = useMatches();
-  const { skills } = useSkills();
+  const { skills, loading: skillsLoading } = useSkills();
+  const { loading: authLoading } = useAuthContext();
 
   useEffect(() => {
     if (skills.length > 0 && !hasAutoLoadedRef.current) {
@@ -40,7 +42,13 @@ export default function MatchesPage() {
         Explore jobs, learning paths, and credentials based on your skills.
       </p>
 
-      {skills.length === 0 ? (
+      {(authLoading || skillsLoading) && (
+        <Card className="text-center py-12">
+          <div className="animate-pulse text-primary-600">Loading your skills...</div>
+        </Card>
+      )}
+
+      {!(authLoading || skillsLoading) && skills.length === 0 ? (
         <Card className="text-center py-12">
           <p className="text-gray-600 mb-4">
             Upload a resume, transcript, or certificate first to see your next steps.
@@ -49,7 +57,7 @@ export default function MatchesPage() {
             <Button>Upload Document</Button>
           </a>
         </Card>
-      ) : (
+      ) : !(authLoading || skillsLoading) && (
         <>
           <Card className="mb-6">
             <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-4 mb-4">
