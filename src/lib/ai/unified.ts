@@ -10,8 +10,8 @@ export async function callAIWithFallback(prompt: string): Promise<string> {
     try {
       console.log('Attempting OpenAI...');
       return await callOpenAI(prompt);
-    } catch (error: any) {
-      const msg = error?.message || String(error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       errors.push(`OpenAI: ${msg}`);
       console.error('OpenAI failed:', msg);
     }
@@ -22,8 +22,8 @@ export async function callAIWithFallback(prompt: string): Promise<string> {
     try {
       console.log('Attempting Gemini...');
       return await callGemini(prompt);
-    } catch (error: any) {
-      const msg = error?.message || String(error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       errors.push(`Gemini: ${msg}`);
       console.error('Gemini failed:', msg);
     }
@@ -34,8 +34,8 @@ export async function callAIWithFallback(prompt: string): Promise<string> {
     try {
       console.log('Attempting LMStudio...');
       return await callLMStudio(prompt);
-    } catch (error: any) {
-      const msg = error?.message || String(error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       errors.push(`LMStudio: ${msg}`);
       console.error('LMStudio failed:', msg);
     }

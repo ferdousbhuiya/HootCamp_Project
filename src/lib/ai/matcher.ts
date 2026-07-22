@@ -5,6 +5,16 @@ import { cleanText, clampConfidence } from '@/lib/security/validation';
 
 type MatchType = 'job' | 'learning_path' | 'credential';
 
+interface RawMatch {
+  title?: unknown;
+  description?: unknown;
+  match_score?: unknown;
+  matched_skills?: unknown[];
+  explanation?: unknown;
+  missing_skills?: unknown[];
+  next_steps?: unknown[];
+}
+
 export async function findMatches(skills: Skill[], matchType: MatchType = 'job'): Promise<Match[]> {
   const skillList = skills.map((skill) => cleanText(skill.name, 80)).join(', ');
   const target = matchType === 'job' ? 'job roles' : matchType === 'learning_path' ? 'learning paths' : 'credentials/certifications';
@@ -32,7 +42,7 @@ Return ONLY valid JSON array.`;
   }
   if (!Array.isArray(json)) return [];
 
-  return json.map((item: any): Match => ({
+  return json.map((item: RawMatch): Match => ({
     id: randomUUID(),
     user_id: '',
     created_at: new Date().toISOString(),

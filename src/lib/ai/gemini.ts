@@ -13,6 +13,10 @@ function getGemini(): GoogleGenAI {
   return genAI;
 }
 
+interface ApiError {
+  status?: number;
+}
+
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
@@ -21,8 +25,9 @@ async function retryWithBackoff<T>(
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
-      const isRetryable = error?.status === 503 || error?.status === 429;
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      const isRetryable = apiError?.status === 503 || apiError?.status === 429;
       if (isRetryable && attempt < maxRetries - 1) {
         const delay = baseDelay * Math.pow(2, attempt);
         console.log(`Gemini API overloaded, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
