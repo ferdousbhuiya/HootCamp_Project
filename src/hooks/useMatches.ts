@@ -75,7 +75,11 @@ export function useMatches() {
       await fetchMatches();
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      if (err instanceof Error && err.message.includes('All AI providers failed')) {
+        setError('Could not find matches. Please configure an AI provider in your app settings.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      }
     } finally {
       setLoading(false);
     }
