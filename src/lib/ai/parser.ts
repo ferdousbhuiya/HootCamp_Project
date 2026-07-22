@@ -3,6 +3,12 @@ import { callAIWithFallback } from './unified';
 import type { Skill } from '@/types';
 import { cleanText, clampConfidence } from '@/lib/security/validation';
 
+interface RawSkill {
+  name?: unknown;
+  category?: unknown;
+  confidence?: unknown;
+}
+
 export async function parseResumeToSkills(text: string): Promise<Skill[]> {
   const prompt = `Extract skills from this resume text. Return a JSON array of objects with:
 - name
@@ -17,7 +23,7 @@ Return ONLY valid JSON array.`;
     cleaned = result.replace(/```json/gi, '').replace(/```/g, '').trim();
     const json: unknown = JSON.parse(cleaned);
     if (!Array.isArray(json)) return [];
-    return json.map((item: any): Skill => ({
+    return json.map((item: RawSkill): Skill => ({
       id: randomUUID(),
       name: cleanText(item?.name, 80),
       category: cleanText(item?.category, 30).toLowerCase() || 'technical',
