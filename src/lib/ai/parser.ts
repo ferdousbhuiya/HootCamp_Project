@@ -42,10 +42,18 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     const path = await import('path');
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.js');
     const data = new Uint8Array(buffer);
+
+    // Prefer CDN-served cmaps/fonts (always available on serverless, no fs dependence).
+    // Fall back to local node_modules paths when CDN is unreachable.
+    const hasCdn = typeof process.env.NEXT_PUBLIC_APP_URL === 'string';
     const doc = await pdfjs.getDocument({
       data,
-      standardFontDataUrl: path.join(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts/'),
-      cMapUrl: path.join(process.cwd(), 'node_modules/pdfjs-dist/cmaps/'),
+      standardFontDataUrl: hasCdn
+        ? 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
+        : path.join(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts/'),
+      cMapUrl: hasCdn
+        ? 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/'
+        : path.join(process.cwd(), 'node_modules/pdfjs-dist/cmaps/'),
       cMapPacked: true,
     }).promise;
 
