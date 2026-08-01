@@ -63,6 +63,7 @@ async function extractTextFromScannedPDF(buffer: Buffer): Promise<string> {
 
   const worker = await createWorker('eng', 1, {
     logger: () => {},
+    langPath: path.join(process.cwd(), 'src', 'lib', 'ai', 'traineddata'),
   });
 
   try {
@@ -105,8 +106,10 @@ export async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
 export async function extractTextFromImage(buffer: Buffer): Promise<string> {
   try {
     console.log('Starting OCR extraction...');
+    const path = await import('path');
     const worker = await createWorker('eng', 1, {
       logger: (m) => console.log(m),
+      langPath: path.join(process.cwd(), 'src', 'lib', 'ai', 'traineddata'),
     });
     console.log('Worker created, starting recognition...');
     const ret = await worker.recognize(buffer);
