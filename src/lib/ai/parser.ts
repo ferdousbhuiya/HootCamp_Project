@@ -57,10 +57,9 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
       cMapPacked: true,
       isEvalSupported: false,
-      // Run parsing on the main thread instead of the worker. Avoids
-      // serverless worker incompatibilities (e.g. missing String methods).
-      // disableWorker is a valid runtime param not present in v3 types.
-      ...({ disableWorker: true } as Record<string, unknown>),
+      // Force main-thread execution — Vercel's worker_threads sandbox breaks
+      // pdfjs's fake worker. mainThreadWorker runs parsing synchronously.
+      ...({ mainThreadWorker: true } as Record<string, unknown>),
     }).promise;
 
     const chunks: string[] = [];
