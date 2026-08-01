@@ -56,6 +56,11 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/',
       cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
       cMapPacked: true,
+      isEvalSupported: false,
+      // Run parsing on the main thread instead of the worker. Avoids
+      // serverless worker incompatibilities (e.g. missing String methods).
+      // disableWorker is a valid runtime param not present in v3 types.
+      ...({ disableWorker: true } as Record<string, unknown>),
     }).promise;
 
     const chunks: string[] = [];
