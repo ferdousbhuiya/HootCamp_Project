@@ -36,44 +36,21 @@ Return ONLY valid JSON array.`;
 }
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  // Text-layer extraction via pdfjs-dist with cmaps + standard fonts configured.
-  // More reliable than pdf-parse on cold-start serverless (no xref/cache issues).
-  try {
-    const path = await import('path');
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.js');
-    const data = new Uint8Array(buffer);
-
-    // Prefer CDN-served cmaps/fonts (always available on serverless, no fs dependence).
-    // Fall back to local node_modules paths when CDN is unreachable.
-    const hasCdn = typeof process.env.NEXT_PUBLIC_APP_URL === 'string';
-    const doc = await pdfjs.getDocument({
-      data,
-      standardFontDataUrl: hasCdn
-        ? 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
-        : path.join(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts/'),
-      cMapUrl: hasCdn
-        ? 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/'
-        : path.join(process.cwd(), 'node_modules/pdfjs-dist/cmaps/'),
-      cMapPacked: true,
-    }).promise;
-
-    const chunks: string[] = [];
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items
-        .map((item) => (item as { str?: string }).str || '')
-        .join(' ');
-      if (pageText.trim()) chunks.push(pageText.trim());
-      page.cleanup();
+  // Text-layer extraction via pdf-parse. Retried once — first call on a cold
+  // serverless instance can fail transiently while pdf.js assets initialize.
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const pdfParse = (await import('pdf-parse')).default;
+      const data = await pdfParse(buffer);
+      const text = (data.text || '').trim();
+      if (text.length > 0) return text;
+    } catch (error) {
+      lastError = error;
+      console.warn('pdf-parse extraction attempt failed:', error);
     }
-    await doc.destroy();
-
-    const text = chunks.join('\n').trim();
-    if (text.length > 0) return text;
-  } catch (error) {
-    console.warn('pdfjs text extraction failed:', error);
   }
+  if (lastError) console.warn('pdf-parse extraction failed after retries:', lastError);
 
   // Scanned/image-only PDFs have no text layer — render pages and OCR them.
   // OCR is disabled in production: tesseract exceeds Vercel serverless limits.
