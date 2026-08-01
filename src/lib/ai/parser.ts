@@ -36,14 +36,35 @@ Return ONLY valid JSON array.`;
 }
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  // Try text-layer extraction first (fast path for digital PDFs)
+  // Text-layer extraction via pdfjs-dist with cmaps + standard fonts configured.
+  // More reliable than pdf-parse on cold-start serverless (no xref/cache issues).
   try {
-    const pdfParse = (await import('pdf-parse')).default;
-    const data = await pdfParse(buffer);
-    const text = (data.text || '').trim();
+    const path = await import('path');
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.js');
+    const data = new Uint8Array(buffer);
+    const doc = await pdfjs.getDocument({
+      data,
+      standardFontDataUrl: path.join(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts/'),
+      cMapUrl: path.join(process.cwd(), 'node_modules/pdfjs-dist/cmaps/'),
+      cMapPacked: true,
+    }).promise;
+
+    const chunks: string[] = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item) => (item as { str?: string }).str || '')
+        .join(' ');
+      if (pageText.trim()) chunks.push(pageText.trim());
+      page.cleanup();
+    }
+    await doc.destroy();
+
+    const text = chunks.join('\n').trim();
     if (text.length > 0) return text;
   } catch (error) {
-    console.warn('pdf-parse failed, falling back to OCR:', error);
+    console.warn('pdfjs text extraction failed:', error);
   }
 
   // Scanned/image-only PDFs have no text layer — render pages and OCR them.
