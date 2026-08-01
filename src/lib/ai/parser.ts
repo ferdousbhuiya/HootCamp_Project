@@ -36,49 +36,18 @@ Return ONLY valid JSON array.`;
 }
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  // Text-layer extraction via pdfjs-dist (v3). Handles xref/pdf versions that
-  // pdf-parse's bundled pdf.js 1.x cannot. Fonts/cmaps served from jsDelivr CDN
-  // so serverless needs no local assets.
+  // Text-layer extraction via unpdf — pure-JS, runs on the main thread,
+  // no worker_threads. Reliable on Vercel serverless where pdfjs's worker
+  // and pdf-parse's bundled pdf.js both fail.
   let lastError: unknown;
   try {
-    const path = await import('path');
-    const pdfjs = await import('pdfjs-dist/build/pdf.js');
-    const data = new Uint8Array(buffer);
-
-    // Force the worker module into the bundle by importing it, then hand pdfjs
-    // the resolved file path. Without this, serverless pruning removes
-    // pdf.worker.js and the fake worker fails to load.
-    const workerModulePath = require.resolve('pdfjs-dist/build/pdf.worker.js');
-    pdfjs.GlobalWorkerOptions.workerSrc = workerModulePath;
-
-    const doc = await pdfjs.getDocument({
-      data,
-      standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/',
-      cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
-      cMapPacked: true,
-      isEvalSupported: false,
-      // Force main-thread execution — Vercel's worker_threads sandbox breaks
-      // pdfjs's fake worker. mainThreadWorker runs parsing synchronously.
-      ...({ mainThreadWorker: true } as Record<string, unknown>),
-    }).promise;
-
-    const chunks: string[] = [];
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items
-        .map((item) => (item as { str?: string }).str || '')
-        .join(' ');
-      if (pageText.trim()) chunks.push(pageText.trim());
-      page.cleanup();
-    }
-    await doc.destroy();
-
-    const text = chunks.join('\n').trim();
+    const { extractText } = await import('unpdf');
+    const { text: pages } = await extractText(new Uint8Array(buffer));
+    const text = (pages || []).map((page) => (page || '').trim()).filter(Boolean).join('\n');
     if (text.length > 0) return text;
   } catch (error) {
     lastError = error;
-    console.warn('pdfjs text extraction failed:', error);
+    console.warn('unpdf text extraction failed:', error);
   }
 
   // Scanned/image-only PDFs have no text layer — render pages and OCR them.
