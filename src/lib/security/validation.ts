@@ -1,10 +1,14 @@
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 export const MAX_TEXT_CHARS = 120_000;
-export const ALLOWED_EXTENSIONS = new Set(['pdf', 'docx', 'txt']);
+export const ALLOWED_EXTENSIONS = new Set(['pdf', 'docx', 'doc', 'txt', 'jpeg', 'jpg', 'png']);
 export const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
   'text/plain',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
   'application/octet-stream',
 ]);
 
@@ -18,8 +22,11 @@ export function validateUpload(file: File | null): string | null {
   if (file.size === 0) return 'This file is empty. Choose a document with content.';
   if (file.size > MAX_FILE_BYTES) return 'This file is larger than 10 MB. Choose a smaller document.';
   const extension = extensionOf(file.name);
-  if (!ALLOWED_EXTENSIONS.has(extension)) return 'File type not supported. Use PDF, DOCX, or TXT.';
-  if (file.type && !ALLOWED_MIME_TYPES.has(file.type)) return 'The file type does not match an accepted document format.';
+  if (!ALLOWED_EXTENSIONS.has(extension)) return 'File type not supported. Use PDF, DOCX, DOC, TXT, JPEG, JPG, or PNG.';
+  // Allow files without MIME type or with application/octet-stream (common for PDFs)
+  if (file.type && !ALLOWED_MIME_TYPES.has(file.type) && file.type !== 'application/octet-stream') {
+    return 'The file type does not match an accepted document format.';
+  }
   return null;
 }
 

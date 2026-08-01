@@ -22,6 +22,32 @@ const SkillCard = ({ skill, onUpdate, onRemove }: SkillCardProps) => {
     setIsEditing(false);
   };
 
+  const getVerificationBadge = () => {
+    if (skill.is_verified) {
+      return (
+        <Badge variant="success" className="text-xs">
+          ✓ Verified
+        </Badge>
+      );
+    }
+    return null;
+  };
+
+  const getSourceText = () => {
+    switch (skill.verification_source) {
+      case 'certificate':
+        return 'From certificate';
+      case 'resume':
+        return 'From resume';
+      case 'ongoing_course':
+        return 'From ongoing course';
+      case 'manual':
+        return 'Manual entry';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 transition-shadow hover:shadow-md">
       {isEditing ? (
@@ -39,13 +65,19 @@ const SkillCard = ({ skill, onUpdate, onRemove }: SkillCardProps) => {
       ) : (
         <>
           <div className="flex justify-between items-start mb-2">
-            <h4 className="font-medium text-gray-900">{skill.name}</h4>
+            <div className="flex items-center gap-2">
+              <h4 className="font-medium text-gray-900">{skill.name}</h4>
+              {getVerificationBadge()}
+            </div>
             <Badge variant={confidenceColor}>
               {Math.round(skill.confidence * 100)}%
             </Badge>
           </div>
           <div className="flex justify-between items-end">
-            <p className="text-sm text-gray-500 capitalize">{skill.category}</p>
+            <p className="text-sm text-gray-500">
+              <span className="capitalize">{skill.category}</span>
+              {getSourceText() && <span className="ml-2 text-xs">• {getSourceText()}</span>}
+            </p>
             <div className="flex items-center gap-2">
               <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-primary-600">
                 <PencilIcon className="w-4 h-4" />

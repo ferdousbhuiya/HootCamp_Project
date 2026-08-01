@@ -11,11 +11,16 @@
 body {
   color: rgb(var(--foreground));
   background-color: rgb(var(--background));
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99, 102, 241, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.06), transparent),
+    radial-gradient(ellipse 50% 40% at 50% 120%, rgba(236, 72, 153, 0.05), transparent);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
 ::selection {
-  background: rgba(15, 23, 42, 0.12);
+  background: rgba(99, 102, 241, 0.18);
   color: rgb(var(--foreground));
 }
 

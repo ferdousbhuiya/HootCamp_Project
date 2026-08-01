@@ -1,11 +1,24 @@
 import { callOpenAI } from './openai';
 import { callGemini } from './gemini';
+import { callGroq } from './groq';
 import { callLMStudio } from './lmstudio';
 
 export async function callAIWithFallback(prompt: string): Promise<string> {
   const errors: string[] = [];
 
-  // Try OpenAI first if available
+  // Try Groq first if available (free tier)
+  if (process.env.GROQ_API_KEY) {
+    try {
+      console.log('Attempting Groq...');
+      return await callGroq(prompt);
+    } catch (error: any) {
+      const msg = error?.message || String(error);
+      errors.push(`Groq: ${msg}`);
+      console.error('Groq failed:', msg);
+    }
+  }
+
+  // Try OpenAI if available
   if (process.env.OPENAI_API_KEY) {
     try {
       console.log('Attempting OpenAI...');

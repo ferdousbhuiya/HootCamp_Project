@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useAuthContext } from '@/context/AuthContext';
-import type { Match, Skill } from '@/types';
+import type { Match, Skill, Certificate, OngoingCourse } from '@/types';
 
 export function useMatches() {
   const { user } = useAuthContext();
@@ -39,7 +39,9 @@ export function useMatches() {
 
   const findJobMatches = useCallback(async (
     skills: Skill[],
-    matchType: 'job' | 'learning_path' | 'credential' = 'job'
+    matchType: 'job' | 'learning_path' | 'credential' = 'job',
+    certificates?: Certificate[],
+    ongoingCourses?: OngoingCourse[]
   ) => {
     if (!user) {
       setError('You must be logged in to find matches.');
@@ -52,7 +54,7 @@ export function useMatches() {
       const response = await fetch('/api/matches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skills, matchType }),
+        body: JSON.stringify({ skills, matchType, certificates, ongoingCourses }),
       });
 
       const data = await response.json();

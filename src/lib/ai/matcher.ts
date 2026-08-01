@@ -1,15 +1,35 @@
 import { randomUUID } from 'crypto';
 import { callAIWithFallback } from './unified';
-import type { Match, Skill } from '@/types';
+import type { Match, Skill, Certificate, OngoingCourse } from '@/types';
 import { cleanText, clampConfidence } from '@/lib/security/validation';
 
 type MatchType = 'job' | 'learning_path' | 'credential';
 
-export async function findMatches(skills: Skill[], matchType: MatchType = 'job'): Promise<Match[]> {
+export async function findMatches(
+  skills: Skill[],
+  matchType: MatchType = 'job',
+  certificates?: Certificate[],
+  ongoingCourses?: OngoingCourse[]
+): Promise<Match[]> {
   const skillList = skills.map((skill) => cleanText(skill.name, 80)).join(', ');
+  const verifiedSkills = skills.filter(s => s.is_verified).map(s => cleanText(s.name, 80)).join(', ');
+  
+  let portfolioContext = '';
+  if (certificates && certificates.length > 0) {
+    const certList = certificates.map(c => `${c.title} from ${c.issuer}`).join(', ');
+    portfolioContext += `\nExisting Certificates: ${certList}`;
+  }
+  if (ongoingCourses && ongoingCourses.length > 0) {
+    const courseList = ongoingCourses.map(c => `${c.course_name} (${c.progress}% complete)`).join(', ');
+    portfolioContext += `\nOngoing Courses: ${courseList}`;
+  }
+  
   const target = matchType === 'job' ? 'job roles' : matchType === 'learning_path' ? 'learning paths' : 'credentials/certifications';
   const prompt = `Given these skills: ${skillList}
-Find 5 matching ${target}.
+${verifiedSkills ? `Verified Skills: ${verifiedSkills}` : ''}
+${portfolioContext}
+
+Find 5 matching ${target}. Consider the verified skills and existing certificates/ongoing courses to provide more relevant recommendations.
 Return a JSON array with objects containing:
 - title
 - description

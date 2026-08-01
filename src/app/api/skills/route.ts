@@ -14,8 +14,13 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const userId = formData.get('userId') as string | null;
+    const source = (formData.get('source') as string) || 'resume';
+    
     const validationError = validateUpload(file);
     if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
+
+    if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
 
     const bytes = await file!.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -24,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     if (extension === 'pdf') {
       rawText = await extractTextFromPDF(buffer);
-    } else if (extension === 'docx') {
+    } else if (extension === 'docx' || extension === 'doc') {
       rawText = await extractTextFromDOCX(buffer);
     } else if (extension === 'txt') {
       rawText = buffer.toString('utf-8');
@@ -32,7 +37,7 @@ export async function POST(request: NextRequest) {
       rawText = await extractTextFromImage(buffer);
     } else {
       return NextResponse.json(
-        { error: 'Unsupported file type. Upload a PDF, DOCX, TXT, PNG, or JPG file.' },
+        { error: 'Unsupported file type. Upload a PDF, DOCX, DOC, TXT, PNG, or JPG file.' },
         { status: 400 }
       );
     }
@@ -40,12 +45,12 @@ export async function POST(request: NextRequest) {
     const text = rawText.trim().slice(0, MAX_TEXT_CHARS);
     if (!text) {
       return NextResponse.json(
-        { error: 'Could not extract text. Upload a text-based PDF, DOCX, or TXT file.' },
+        { error: 'Could not extract text. Upload a text-based PDF, DOCX, DOC, TXT, PNG, or JPG file.' },
         { status: 400 }
       );
     }
 
-    const skills = await parseResumeToSkills(text);
+    const skills = await parseResumeToSkills(text, userId, source as 'resume' | 'certificate' | 'manual');
     return NextResponse.json({ skills });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

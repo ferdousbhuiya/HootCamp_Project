@@ -22,14 +22,14 @@ const ExplanationPanel = ({ explanation, matchedSkills, missingSkills, nextSteps
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-            <CheckCircleIcon className="w-5 h-5 mr-2 text-green-500" />
+            <CheckCircleIcon className="w-5 h-5 mr-2 text-emerald-500" />
             Your Matched Skills
           </h5>
           <div className="flex flex-wrap gap-2">
             {matchedSkills.map((skill, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded"
+                className="px-2 py-1 bg-emerald-100 text-emerald-800 text-sm rounded"
               >
                 {skill}
               </span>
@@ -40,14 +40,14 @@ const ExplanationPanel = ({ explanation, matchedSkills, missingSkills, nextSteps
         {missingSkills && missingSkills.length > 0 && (
           <div>
             <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-              <ArrowRightCircleIcon className="w-5 h-5 mr-2 text-yellow-500" />
+              <ArrowRightCircleIcon className="w-5 h-5 mr-2 text-amber-500" />
               Skills to Develop
             </h5>
             <div className="flex flex-wrap gap-2">
               {missingSkills.map((skill, index) => (
                 <span
                   key={index}
-                  className="px-2 py-1 bg-yellow-100 text-yellow-800 text-sm rounded"
+                  className="px-2 py-1 bg-amber-100 text-amber-800 text-sm rounded"
                 >
                   {skill}
                 </span>

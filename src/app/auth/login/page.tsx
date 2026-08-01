@@ -18,7 +18,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-primary-50 via-white to-violet-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="max-w-2xl">
           <p className="text-sm font-medium text-slate-500">Welcome back</p>
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
           <p className="mt-5 text-center text-sm text-slate-600">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="font-medium text-slate-900 underline-offset-4 hover:underline">
+            <Link href="/auth/signup" className="font-medium text-primary-700 underline-offset-4 hover:underline">
               Sign up
             </Link>
           </p>

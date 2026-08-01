@@ -16,6 +16,8 @@ const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/upload', label: 'Upload' },
   { href: '/matches', label: 'Matches' },
+  { href: '/career', label: 'Career' },
+  { href: '/report', label: 'Report' },
 ];
 
 function getInitials(name: string, email: string) {
@@ -100,7 +102,7 @@ const Navbar = () => {
     <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-900 text-sm font-semibold tracking-wide text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary-200 bg-primary-600 text-sm font-semibold tracking-wide text-white">
             SP
           </div>
           <div className="leading-tight">
@@ -118,7 +120,7 @@ const Navbar = () => {
                 key={link.href}
                 href={link.href}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  active ? 'bg-primary-600 text-white' : 'text-slate-600 hover:bg-primary-50 hover:text-primary-700'
                 }`}
               >
                 {link.label}
@@ -130,7 +132,7 @@ const Navbar = () => {
         {authReady && user ? (
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 sm:flex">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold uppercase tracking-wide text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold uppercase tracking-wide text-white">
                 {getInitials(displayName, user.email)}
               </div>
               <div className="leading-tight">
@@ -146,13 +148,13 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             <Link
               href="/auth/login"
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-primary-50 hover:text-primary-700"
             >
               Login
             </Link>
             <Link
               href="/auth/signup"
-              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+              className="rounded-full bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
             >
               Sign Up
             </Link>

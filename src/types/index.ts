@@ -23,6 +23,10 @@ export interface Skill {
   category: string;
   confidence: number;
   source: 'resume' | 'transcript' | 'certificate' | 'manual';
+  verification_source: 'manual' | 'resume' | 'certificate' | 'ongoing_course';
+  certificate_id?: string;
+  ongoing_course_id?: string;
+  is_verified: boolean;
 }
 
 export interface UserProfile {
@@ -51,3 +55,106 @@ export interface AIProvider {
   name: 'openai' | 'lmstudio';
   isAvailable: boolean;
 }
+
+export interface Certificate {
+  id: string;
+  user_id: string;
+  title: string;
+  issuer?: string;
+  issue_date?: string;
+  expiry_date?: string;
+  credential_id?: string;
+  verification_url?: string;
+  verification_status: 'pending' | 'verified' | 'failed' | 'not_available';
+  file_name: string;
+  file_type: string;
+  storage_path?: string;
+  extracted_text?: string;
+  created_at: string;
+}
+
+export interface OngoingCourse {
+  id: string;
+  user_id: string;
+  course_name: string;
+  provider?: string;
+  platform?: string;
+  start_date?: string;
+  expected_completion_date?: string;
+  progress: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold';
+  url?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobRole {
+  id: string;
+  title: string;
+  description?: string;
+  required_skills?: string[];
+  salary_range?: string;
+  demand_level?: 'low' | 'medium' | 'high';
+  entry_difficulty?: 'entry' | 'intermediate' | 'advanced';
+  created_at: string;
+}
+
+export interface GapAnalysis {
+  match_score: number;
+  coverage: number;
+  have_skills: string[];
+  missing_skills: string[];
+  summary: string;
+  recommendations: string[];
+}
+
+export interface CareerGoal {
+  id: string;
+  user_id: string;
+  role_title: string;
+  desired_role_id?: string;
+  gap_analysis?: GapAnalysis;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoadmapCourse {
+  title: string;
+  platform?: string;
+  url?: string;
+  cost?: string;
+}
+
+export interface RoadmapPhase {
+  phase: number;
+  months: string;
+  title: string;
+  summary: string;
+  milestones: string[];
+  courses: RoadmapCourse[];
+  skills_to_build: string[];
+}
+
+export interface Roadmap {
+  id: string;
+  user_id: string;
+  role_title: string;
+  desired_role_id?: string;
+  phases: RoadmapPhase[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  platform?: string;
+  url?: string;
+  cost?: string;
+  skills?: string[];
+  level?: 'beginner' | 'intermediate' | 'advanced';
+  created_at: string;
+}
+
+export type CourseRecommendation = Course & { covered_skills: string[] };

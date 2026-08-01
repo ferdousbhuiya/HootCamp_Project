@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatches } from '@/hooks/useMatches';
 import { useSkills } from '@/hooks/useSkills';
+import { useCertificates } from '@/hooks/useCertificates';
+import { useOngoingCourses } from '@/hooks/useOngoingCourses';
 import { useAuthContext } from '@/context/AuthContext';
 import MatchList from '@/components/matches/MatchList';
 import Button from '@/components/ui/Button';
@@ -21,40 +23,46 @@ export default function MatchesPage() {
   const hasAutoLoadedRef = useRef(false);
   const { matches, loading, error, findJobMatches } = useMatches();
   const { skills, loading: skillsLoading } = useSkills();
+  const { certificates } = useCertificates();
+  const { courses } = useOngoingCourses();
   const { loading: authLoading } = useAuthContext();
 
   useEffect(() => {
     if (skills.length > 0 && !hasAutoLoadedRef.current) {
       hasAutoLoadedRef.current = true;
-      findJobMatches(skills, activeType);
+      findJobMatches(skills, activeType, certificates, courses);
     }
-  }, [skills, findJobMatches, activeType]);
+  }, [skills, findJobMatches, activeType, certificates, courses]);
 
   const loadMatches = (type: MatchType) => {
     setActiveType(type);
-    if (skills.length > 0) findJobMatches(skills, type);
+    if (skills.length > 0) {
+      findJobMatches(skills, type, certificates, courses);
+    }
   };
+
+  const verifiedSkills = skills.filter(s => s.is_verified).length;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-3">Your Career Pathfinder</h1>
       <p className="text-gray-600 mb-8">
-        Explore jobs, learning paths, and credentials based on your skills.
+        Explore jobs, learning paths, and credentials based on your complete portfolio.
       </p>
 
       {(authLoading || skillsLoading) && (
         <Card className="text-center py-12">
-          <div className="animate-pulse text-primary-600">Loading your skills...</div>
+          <div className="animate-pulse text-primary-600">Loading your portfolio...</div>
         </Card>
       )}
 
       {!(authLoading || skillsLoading) && skills.length === 0 ? (
         <Card className="text-center py-12">
           <p className="text-gray-600 mb-4">
-            Upload a resume, transcript, or certificate first to see your next steps.
+            Build your portfolio first to see personalized recommendations.
           </p>
           <a href="/upload">
-            <Button>Upload Document</Button>
+            <Button>Build Your Portfolio</Button>
           </a>
         </Card>
       ) : !(authLoading || skillsLoading) && (
@@ -73,11 +81,16 @@ export default function MatchesPage() {
                 </Button>
               ))}
             </div>
+            <div className="mb-4 p-4 bg-primary-50 rounded-lg">
+              <p className="text-sm text-primary-900">
+                <strong>Portfolio Context:</strong> {skills.length} total skills ({verifiedSkills} verified), {certificates.length} certificates, {courses.length} ongoing courses
+              </p>
+            </div>
             <div className="flex justify-between items-center">
               <p className="text-gray-600">
-                {skills.length} skills loaded from your document
+                Recommendations based on your complete portfolio
               </p>
-              <Button onClick={() => findJobMatches(skills, activeType)} disabled={loading}>
+              <Button onClick={() => findJobMatches(skills, activeType, certificates, courses)} disabled={loading}>
                 {loading ? 'Finding Matches...' : 'Refresh Matches'}
               </Button>
             </div>

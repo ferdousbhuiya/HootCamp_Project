@@ -44,22 +44,28 @@ export function useSkills() {
     // Optimistic update
     setSkills(nextSkills);
 
-    const supabase = getSupabaseClient();
-    // Ensure all skills have a user_id before upserting
-    const skillsWithUser = nextSkills.map(skill => ({ ...skill, user_id: user.id }));
+    try {
+      const supabase = getSupabaseClient();
+      // Ensure all skills have a user_id before upserting
+      const skillsWithUser = nextSkills.map(skill => ({ ...skill, user_id: user.id }));
 
-    // Here we need to decide on a primary key for upsert. 'id' is a good candidate.
-    // The onConflict needs to be on a unique column, assuming 'id' is the primary key.
-    const { error: upsertError } = await supabase.from('skills').upsert(skillsWithUser);
+      // Here we need to decide on a primary key for upsert. 'id' is a good candidate.
+      // The onConflict needs to be on a unique column, assuming 'id' is the primary key.
+      const { error: upsertError } = await supabase.from('skills').upsert(skillsWithUser);
 
-    if (upsertError) {
-      setError(upsertError.message);
-      // Revert state on failure
-      await fetchSkills();
+      if (upsertError) {
+        console.error('Failed to persist skills to database:', upsertError);
+        setError(`Failed to save to database: ${upsertError.message}`);
+        // Don't revert state - keep the skills locally even if DB fails
+      }
+    } catch (err) {
+      console.error('Unexpected error persisting skills:', err);
+      setError('Failed to save skills to database');
+      // Don't revert state - keep the skills locally even if DB fails
     }
   };
 
-  const extractSkills = async (file: File) => {
+  const extractSkills = async (file: File, source: 'resume' | 'certificate' | 'manual' = 'resume') => {
     if (!user) {
       setError('You must be logged in to extract skills.');
       return;
@@ -69,6 +75,8 @@ export function useSkills() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('userId', user.id);
+      formData.append('source', source);
       const response = await fetch('/api/skills', {
         method: 'POST',
         body: formData,
@@ -78,11 +86,15 @@ export function useSkills() {
 
       const normalizedSkills: Skill[] = (data.skills || []).map((skill: Partial<Skill>) => ({
         id: skill.id || crypto.randomUUID(),
+        user_id: skill.user_id || user.id,
         name: skill.name || 'Unnamed Skill',
         category: skill.category || 'technical',
         confidence: typeof skill.confidence === 'number' ? skill.confidence : 0.5,
-        source: file.name || 'document',
-        user_id: user.id, // Ensure user_id is set
+        source: skill.source || source,
+        verification_source: skill.verification_source || (source === 'certificate' ? 'certificate' : 'resume'),
+        is_verified: skill.is_verified || (source === 'certificate'),
+        certificate_id: skill.certificate_id,
+        ongoing_course_id: skill.ongoing_course_id,
       }));
 
       // Merge new skills with existing ones, avoiding duplicates by name
@@ -114,6 +126,8 @@ export function useSkills() {
       category,
       confidence: 1,
       source: 'manual',
+      verification_source: 'manual',
+      is_verified: false,
       user_id: user.id,
     };
     persistSkills([...skills, newSkill]);
@@ -143,8 +157,8 @@ export function useSkills() {
 
   const clearSkills = () => {
     if (!user) return;
-    persistSkills([]); // This will upsert an empty array for the user
+    setSkills([]);
   };
 
-  return { skills, loading, error, extractSkills, addSkill, updateSkill, removeSkill, clearSkills };
+  return { skills, loading, error, extractSkills, addSkill, updateSkill, removeSkill, clearSkills, fetchSkills };
 }
