@@ -36,30 +36,24 @@ Return ONLY valid JSON array.`;
 }
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  // Text-layer extraction via unpdf — pure-JS, runs on the main thread,
+  // Text-layer extraction via unpdf — pure-JS, runs on the main thread with
   // no worker_threads. Reliable on Vercel serverless where pdfjs's worker
   // and pdf-parse's bundled pdf.js both fail.
-  let lastError: unknown;
   try {
     const { extractText } = await import('unpdf');
     const { text: pages } = await extractText(new Uint8Array(buffer));
     const text = (pages || []).map((page) => (page || '').trim()).filter(Boolean).join('\n');
     if (text.length > 0) return text;
   } catch (error) {
-    lastError = error;
     console.warn('unpdf text extraction failed:', error);
   }
 
   // Scanned/image-only PDFs have no text layer — render pages and OCR them.
   // OCR is disabled in production: tesseract exceeds Vercel serverless limits.
   if (process.env.NODE_ENV === 'production') {
-    const reason = lastError
-      ? `extraction_error: ${lastError instanceof Error ? lastError.message : String(lastError)}`
-      : 'extraction_empty (pdfjs returned no text)';
-    console.error('PDF text extraction failed in prod. Reason:', reason);
     throw new Error(
-      `Scanned PDFs (image-only) cannot be processed in this environment. ` +
-      `Upload a text-based PDF, or use a PDF with a selectable text layer. [${reason}]`
+      'Scanned PDFs (image-only) cannot be processed in this environment. ' +
+      'Upload a text-based PDF, or use a PDF with a selectable text layer.'
     );
   }
 
