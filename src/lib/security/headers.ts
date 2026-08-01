@@ -11,7 +11,7 @@ export function withSecurityHeaders(response: NextResponse): NextResponse {
     "img-src 'self' data: blob:",
     "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com https://frontend-cdn.perplexity.ai",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    `script-src 'self'${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ''}`,
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
     "connect-src 'self' https://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com",
     "worker-src 'self' blob:",
   ].join('; ');
