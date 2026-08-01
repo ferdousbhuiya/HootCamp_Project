@@ -15,3 +15,18 @@ declare module 'pdf-parse' {
 
   export default pdfParse;
 }
+
+declare module 'pdfjs-dist/build/pdf.js' {
+  export const GlobalWorkerOptions: { workerSrc: string };
+  export function getDocument(
+    params: Record<string, unknown>
+  ): { promise: Promise<PDFDocumentProxy> };
+  export interface PDFDocumentProxy {
+    numPages: number;
+    getPage(n: number): Promise<{
+      getTextContent(): Promise<{ items: unknown[] }>;
+      cleanup(): void;
+    }>;
+    destroy(): Promise<void>;
+  }
+}

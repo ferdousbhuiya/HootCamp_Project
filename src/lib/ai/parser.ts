@@ -42,13 +42,13 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   let lastError: unknown;
   try {
     const path = await import('path');
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.js');
+    const pdfjs = await import('pdfjs-dist/build/pdf.js');
     const data = new Uint8Array(buffer);
 
     // Force the worker module into the bundle by importing it, then hand pdfjs
     // the resolved file path. Without this, serverless pruning removes
     // pdf.worker.js and the fake worker fails to load.
-    const workerModulePath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.js');
+    const workerModulePath = require.resolve('pdfjs-dist/build/pdf.worker.js');
     pdfjs.GlobalWorkerOptions.workerSrc = workerModulePath;
 
     const doc = await pdfjs.getDocument({
