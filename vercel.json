@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "src/app/api/skills/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/certificate-extract/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/career/gap/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/career/roadmap/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/report/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
