@@ -46,7 +46,15 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     console.warn('pdf-parse failed, falling back to OCR:', error);
   }
 
-  // Scanned/image-only PDFs have no text layer — render pages and OCR them
+  // Scanned/image-only PDFs have no text layer — render pages and OCR them.
+  // OCR is disabled in production: tesseract exceeds Vercel serverless limits.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Scanned PDFs (image-only) cannot be processed in this environment. ' +
+      'Upload a text-based PDF, or use a PDF with a selectable text layer.'
+    );
+  }
+
   const ocrText = await extractTextFromScannedPDF(buffer);
   const trimmed = ocrText.trim();
   if (trimmed.length === 0) {
@@ -104,6 +112,13 @@ export async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
 }
 
 export async function extractTextFromImage(buffer: Buffer): Promise<string> {
+  // OCR is disabled in production: tesseract exceeds Vercel serverless limits.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Image text extraction is not available in this environment. ' +
+      'Upload a PDF, DOCX, DOC, or TXT file instead.'
+    );
+  }
   try {
     console.log('Starting OCR extraction...');
     const path = await import('path');
