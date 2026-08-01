@@ -55,9 +55,13 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   // Scanned/image-only PDFs have no text layer — render pages and OCR them.
   // OCR is disabled in production: tesseract exceeds Vercel serverless limits.
   if (process.env.NODE_ENV === 'production') {
+    const reason = lastError
+      ? `extraction_error: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+      : 'extraction_empty (pdf-parse returned no text)';
+    console.error('PDF text extraction failed in prod. Reason:', reason);
     throw new Error(
-      'Scanned PDFs (image-only) cannot be processed in this environment. ' +
-      'Upload a text-based PDF, or use a PDF with a selectable text layer.'
+      `Scanned PDFs (image-only) cannot be processed in this environment. ` +
+      `Upload a text-based PDF, or use a PDF with a selectable text layer. [${reason}]`
     );
   }
 
