@@ -17,7 +17,7 @@ import { cleanText } from '@/lib/security/validation';
  * sanitized afterwards (strip < >, truncate, clamp, cap array sizes).
  */
 
-function parseAIJson<T>(result: string): T | null {
+export function parseAIJson<T>(result: string): T | null {
   const cleaned = result.replace(/```json/gi, '').replace(/```/g, '').trim();
   try {
     return JSON.parse(cleaned) as T;
@@ -90,7 +90,7 @@ function sanitizeRoadmap(raw: any, roleTitle: string, roleId?: string): Roadmap 
   };
 }
 
-function buildPortfolioContext(skills: Skill[], certificates?: Certificate[], ongoingCourses?: OngoingCourse[]): string {
+export function buildPortfolioContext(skills: Skill[], certificates?: Certificate[], ongoingCourses?: OngoingCourse[]): string {
   const skillLines = skills
     .map((s) => `${cleanText(s.name, 80)} (confidence ${Math.round((s.confidence || 0) * 100)}%)`)
     .join(', ');

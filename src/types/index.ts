@@ -115,8 +115,51 @@ export interface CareerGoal {
   role_title: string;
   desired_role_id?: string;
   gap_analysis?: GapAnalysis;
+  is_active?: boolean;
+  baseline?: GoalBaseline | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface GoalBaseline {
+  skills: string[];
+  portfolio_score: number;
+  match_score: number;
+  courses: string[];
+  captured_at: string;
+}
+
+export interface GoalProgress {
+  role_title: string;
+  coverage: number;
+  match_score_now: number;
+  match_score_change: number;
+  skills_acquired: string[];
+  goal_skills_acquired: string[];
+  courses_completed: string[];
+  roadmap_phases_completed: number;
+  roadmap_total_phases: number;
+  portfolio_score_now: number;
+  baseline: GoalBaseline;
+}
+
+export interface PortfolioFeedback {
+  strengths: string[];
+  weaknesses: string[];
+  missing_keywords: string[];
+  suggestions: { title: string; description: string }[];
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface RoleComparison {
+  role: JobRole;
+  gap: GapAnalysis;
+  courses: CourseRecommendation[];
+  cached: boolean;
 }
 
 export interface RoadmapCourse {

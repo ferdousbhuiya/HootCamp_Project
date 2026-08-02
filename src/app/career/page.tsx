@@ -9,12 +9,14 @@ import { useCareerRoles } from '@/hooks/useCareerRoles';
 import { useCareerGoal } from '@/hooks/useCareerGoal';
 import { useRoadmap } from '@/hooks/useRoadmap';
 import { useCourses } from '@/hooks/useCourses';
+import { useRoleCompare } from '@/hooks/useRoleCompare';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import RoleSelector from '@/components/career/RoleSelector';
 import GapAnalysisCard from '@/components/career/GapAnalysisCard';
 import RoadmapTimeline from '@/components/career/RoadmapTimeline';
 import CourseRecommendationList from '@/components/career/CourseRecommendationList';
+import RoleComparisonView from '@/components/career/RoleComparison';
 import type { JobRole, GapAnalysis } from '@/types';
 
 export default function CareerPage() {
@@ -26,10 +28,33 @@ export default function CareerPage() {
   const { goals, analyzing, error, loadGoals, analyzeGap, findGoalForRole } = useCareerGoal();
   const { roadmap, generating: roadmapGenerating, loadRoadmap, generateRoadmap } = useRoadmap();
   const { recommendations, recommending, fetchCatalog, recommend } = useCourses();
+  const { comparisons, comparing, error: compareError, compareRoles } = useRoleCompare();
 
   const [selectedRole, setSelectedRole] = useState<JobRole | null>(null);
   const [gapAnalysis, setGapAnalysis] = useState<GapAnalysis | null>(null);
   const [gapPersisted, setGapPersisted] = useState(true);
+  const [compareSelected, setCompareSelected] = useState<Set<string>>(new Set());
+
+  const toggleCompareRole = useCallback((roleId: string) => {
+    setCompareSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(roleId)) next.delete(roleId);
+      else if (next.size < 3) next.add(roleId);
+      return next;
+    });
+  }, []);
+
+  const handleCompare = async () => {
+    if (!user || compareSelected.size < 2) return;
+    const selectedRoles = roles.filter((r) => compareSelected.has(r.id));
+    await compareRoles(
+      user.id,
+      selectedRoles.map((r) => ({ roleId: r.id, roleTitle: r.title })),
+      skills,
+      certificates,
+      courses
+    );
+  };
 
   useEffect(() => {
     if (user?.id) loadGoals(user.id);
@@ -197,6 +222,66 @@ export default function CareerPage() {
                 loading={recommending}
                 catalogEmpty={recommendations.length === 0 && !recommending}
               />
+            </Card>
+          )}
+
+          {/* Role comparison */}
+          {hasPortfolio && (
+            <Card>
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-sm font-bold text-violet-700">4</span>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Compare career paths</h2>
+                  <p className="text-sm text-slate-500">
+                    Pick up to 3 roles to see which fits you best.
+                  </p>
+                </div>
+              </div>
+
+              {!rolesLoading && (
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {roles.map((role) => {
+                    const isSelected = compareSelected.has(role.id);
+                    return (
+                      <button
+                        key={role.id}
+                        onClick={() => toggleCompareRole(role.id)}
+                        className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                          isSelected
+                            ? 'border-violet-500 bg-violet-50 text-violet-700'
+                            : 'border-slate-300 bg-white text-slate-700 hover:border-violet-300'
+                        }`}
+                      >
+                        {role.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <Button
+                onClick={handleCompare}
+                disabled={comparing || compareSelected.size < 2}
+                className="mb-4"
+              >
+                {comparing ? 'Comparing roles...' : `Compare (${compareSelected.size}/3 selected)`}
+              </Button>
+
+              {compareError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {compareError}
+                </div>
+              )}
+
+              {comparing ? (
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="h-16 animate-pulse rounded-lg bg-slate-100" />
+                  ))}
+                </div>
+              ) : (
+                <RoleComparisonView comparisons={comparisons} />
+              )}
             </Card>
           )}
         </div>
