@@ -10,3 +10,6 @@ eng.traineddata
 
 .vercel
 .env*
+
+# nested GitHub Classroom repo (separate project)
+buildphase-ferdousbhuiya/
