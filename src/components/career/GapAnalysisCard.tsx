@@ -2,11 +2,15 @@
 
 import type { GapAnalysis, JobRole } from '@/types';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 
 interface GapAnalysisCardProps {
   role: JobRole;
   analysis: GapAnalysis;
   persisted: boolean;
+  onSetActive?: () => void;
+  isActiveGoal?: boolean;
+  settingGoal?: boolean;
 }
 
 function ScoreRing({ score }: { score: number }) {
@@ -47,7 +51,14 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export default function GapAnalysisCard({ role, analysis, persisted }: GapAnalysisCardProps) {
+export default function GapAnalysisCard({
+  role,
+  analysis,
+  persisted,
+  onSetActive,
+  isActiveGoal,
+  settingGoal,
+}: GapAnalysisCardProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6">
       <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
@@ -56,8 +67,14 @@ export default function GapAnalysisCard({ role, analysis, persisted }: GapAnalys
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-xl font-semibold text-slate-900">{role.title}</h3>
+            {isActiveGoal && <Badge variant="success">Active goal</Badge>}
             {!persisted && (
               <Badge variant="warning">Not saved — add a portfolio refresh to persist</Badge>
+            )}
+            {onSetActive && !isActiveGoal && (
+              <Button size="sm" variant="outline" onClick={onSetActive} disabled={settingGoal}>
+                {settingGoal ? 'Setting...' : 'Make this my goal'}
+              </Button>
             )}
           </div>
 

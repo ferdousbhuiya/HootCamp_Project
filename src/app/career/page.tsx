@@ -10,6 +10,7 @@ import { useCareerGoal } from '@/hooks/useCareerGoal';
 import { useRoadmap } from '@/hooks/useRoadmap';
 import { useCourses } from '@/hooks/useCourses';
 import { useRoleCompare } from '@/hooks/useRoleCompare';
+import { useGoalProgress } from '@/hooks/useGoalProgress';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import RoleSelector from '@/components/career/RoleSelector';
@@ -17,6 +18,7 @@ import GapAnalysisCard from '@/components/career/GapAnalysisCard';
 import RoadmapTimeline from '@/components/career/RoadmapTimeline';
 import CourseRecommendationList from '@/components/career/CourseRecommendationList';
 import RoleComparisonView from '@/components/career/RoleComparison';
+import GoalProgressCard from '@/components/career/GoalProgressCard';
 import type { JobRole, GapAnalysis } from '@/types';
 
 export default function CareerPage() {
@@ -29,6 +31,7 @@ export default function CareerPage() {
   const { roadmap, generating: roadmapGenerating, loadRoadmap, generateRoadmap } = useRoadmap();
   const { recommendations, recommending, fetchCatalog, recommend } = useCourses();
   const { comparisons, comparing, error: compareError, compareRoles } = useRoleCompare();
+  const { progress, loading: progressLoading, setting: settingGoal, error: goalError, loadProgress, setActiveGoal } = useGoalProgress();
 
   const [selectedRole, setSelectedRole] = useState<JobRole | null>(null);
   const [gapAnalysis, setGapAnalysis] = useState<GapAnalysis | null>(null);
@@ -59,6 +62,10 @@ export default function CareerPage() {
   useEffect(() => {
     if (user?.id) loadGoals(user.id);
   }, [user?.id, loadGoals]);
+
+  useEffect(() => {
+    if (user?.id) loadProgress(user.id);
+  }, [user?.id, loadProgress]);
 
   useEffect(() => {
     fetchCatalog();
@@ -92,6 +99,15 @@ export default function CareerPage() {
   const handleGenerateRoadmap = async () => {
     if (!user || !selectedRole) return;
     await generateRoadmap(user.id, selectedRole, skills, gapAnalysis || undefined, certificates, courses);
+  };
+
+  const handleSetActiveGoal = async () => {
+    if (!user || !selectedRole) return;
+    const result = await setActiveGoal(user.id, selectedRole.title);
+    if (result) {
+      // Refresh goals so the "previously analyzed" state stays accurate
+      await loadGoals(user.id);
+    }
   };
 
   const hasPortfolio = skills.length > 0 || certificates.length > 0 || courses.length > 0;
@@ -166,7 +182,23 @@ export default function CareerPage() {
               role={selectedRole}
               analysis={gapAnalysis}
               persisted={gapPersisted}
+              onSetActive={handleSetActiveGoal}
+              isActiveGoal={progress?.role_title.toLowerCase() === selectedRole.title.toLowerCase()}
+              settingGoal={settingGoal}
             />
+          )}
+
+          {/* Goal progress */}
+          {progress && (
+            <Card>
+              <GoalProgressCard progress={progress} />
+            </Card>
+          )}
+
+          {goalError && (
+            <Card className="border-red-200 bg-red-50">
+              <p className="text-sm font-semibold text-red-700">{goalError}</p>
+            </Card>
           )}
 
           {/* Roadmap */}
