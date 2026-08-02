@@ -8,8 +8,10 @@ import { useMatches } from '@/hooks/useMatches';
 import { useCertificates } from '@/hooks/useCertificates';
 import { useOngoingCourses } from '@/hooks/useOngoingCourses';
 import { computePortfolioScore } from '@/lib/portfolioScore';
+import { usePortfolioFeedback } from '@/hooks/usePortfolioFeedback';
 import PortfolioScoreCard from '@/components/dashboard/PortfolioScoreCard';
 import SkillDistributionChart from '@/components/dashboard/SkillDistributionChart';
+import PortfolioFeedbackCard from '@/components/career/PortfolioFeedbackCard';
 
 export default function DashboardPage() {
   const { skills } = useSkills();
@@ -20,6 +22,7 @@ export default function DashboardPage() {
   const verifiedSkills = skills.filter(s => s.is_verified).length;
   const totalPortfolioItems = skills.length + certificates.length + courses.length;
   const portfolioScore = computePortfolioScore(skills, certificates, courses);
+  const { feedback, loading: feedbackLoading, error: feedbackError, getFeedback } = usePortfolioFeedback();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -102,6 +105,23 @@ export default function DashboardPage() {
                 <Button variant="outline" className="w-full">View Job Matches</Button>
               </Link>
             </div>
+          </Card>
+        </div>
+      )}
+
+      {totalPortfolioItems > 0 && (
+        <div className="mt-8">
+          <Card>
+            <h2 className="mb-4 text-xl font-semibold text-slate-900">AI Portfolio Feedback</h2>
+            <p className="mb-4 text-sm text-slate-500">
+              Get an AI review of your strengths, gaps, and keywords employers look for.
+            </p>
+            <PortfolioFeedbackCard
+              feedback={feedback}
+              loading={feedbackLoading}
+              error={feedbackError}
+              onGetFeedback={() => getFeedback(skills, certificates, courses)}
+            />
           </Card>
         </div>
       )}

@@ -17,6 +17,7 @@ const navLinks = [
   { href: '/upload', label: 'Upload' },
   { href: '/matches', label: 'Matches' },
   { href: '/career', label: 'Career' },
+  { href: '/advisor', label: 'Advisor' },
   { href: '/report', label: 'Report' },
 ];
 
