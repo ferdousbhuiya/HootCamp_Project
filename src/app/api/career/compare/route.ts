@@ -58,12 +58,24 @@ export async function POST(request: NextRequest) {
       const cachedGoal = roleTitle ? goalByTitle.get(roleTitle.toLowerCase()) : undefined;
       if (cachedGoal?.gap_analysis) {
         const gap = cachedGoal.gap_analysis;
+        // Enrich the cached role with market data from job_roles (salary/demand)
+        let cachedRole: { id: string; title: string; description?: string; salary_range?: string; demand_level?: string; entry_difficulty?: string; created_at: string } = {
+          id: cachedGoal.desired_role_id || '',
+          title: cachedGoal.role_title,
+          created_at: cachedGoal.updated_at || new Date().toISOString(),
+        };
+        if (cachedGoal.desired_role_id) {
+          const { data: roleRows } = await supabase
+            .from('job_roles')
+            .select('id, title, description, salary_range, demand_level, entry_difficulty, created_at')
+            .eq('id', cachedGoal.desired_role_id)
+            .limit(1);
+          if (roleRows && roleRows.length > 0) {
+            cachedRole = roleRows[0] as typeof cachedRole;
+          }
+        }
         comparisons.push({
-          role: {
-            id: cachedGoal.desired_role_id || '',
-            title: cachedGoal.role_title,
-            created_at: cachedGoal.updated_at || new Date().toISOString(),
-          },
+          role: cachedRole as import('@/types').JobRole,
           gap,
           courses: recommendCourses(catalog, gap.missing_skills, 4),
           cached: true,
